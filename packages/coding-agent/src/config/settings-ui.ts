@@ -16,7 +16,7 @@ import { cfgAutolearnEnabled } from "../autolearn/settings";
 import { cfgMemoryBackend } from "../memory-backend/settings";
 import { cfgTuiVimMode } from "../modes/settings";
 import { cfgAdvisorEnabled } from "../advisor/settings";
-import { cfgContextFilesExtra } from "../session/context-settings";
+import { cfgContextFilesExtra, cfgCompactionThresholdPercent } from "../session/context-settings";
 import { cfgToolsRestrictedFolders } from "../tools/settings";
 
 /** Condition over the global settings; hidden (false) until they are initialized. */
@@ -40,6 +40,8 @@ const CONDITIONS: Record<string, () => boolean> = {
 	// These editors write the global layer; hide them so a project-supplied list is never promoted to global.
 	contextFilesExtraNotProject: whenSettings(s => cfgContextFilesExtra.provenance(s) !== "project"),
 	restrictedFoldersNotProject: whenSettings(s => cfgToolsRestrictedFolders.provenance(s) !== "project"),
+	// A positive percentage is the active trigger; a fixed limit alongside it would be dead weight.
+	compactionThresholdDefault: whenSettings(s => !(cfgCompactionThresholdPercent.get(s) > 0)),
 };
 
 /** Description suffix telling the panel user that an environment variable is in play. */

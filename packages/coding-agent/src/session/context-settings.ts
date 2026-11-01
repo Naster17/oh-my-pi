@@ -163,7 +163,8 @@ export const cfgCompactionThresholdPercent = register({
 		tab: "context",
 		group: "Compaction",
 		label: "Compaction Threshold",
-		description: "Percent threshold for context maintenance; set to Default to use legacy reserve-based behavior",
+		description:
+			"Percent of the context window to compact at; takes precedence over Compaction Token Limit. Set to Default to use the fixed token limit or the legacy reserve-based threshold",
 		options: [
 			{ value: "default", label: "Default", description: "Legacy reserve-based threshold" },
 			{ value: "10", label: "10%", description: "Extremely early maintenance" },
@@ -190,9 +191,11 @@ export const cfgCompactionThresholdTokens = register({
 		tab: "context",
 		group: "Compaction",
 		label: "Compaction Token Limit",
-		description: "Fixed token limit for context maintenance; overrides percentage if set",
+		description:
+			"Fixed token trigger, used when Compaction Threshold is Default; overrides only the legacy reserve-based threshold",
+		condition: "compactionThresholdDefault",
 		options: [
-			{ value: "default", label: "Default", description: "Use percentage-based threshold" },
+			{ value: "default", label: "Default", description: "No fixed limit; use the Compaction Threshold" },
 			{ value: "25000", label: "25K tokens", description: "1/8 of a 200K window" },
 			{ value: "50000", label: "50K tokens", description: "1/4 of a 200K window" },
 			{ value: "100000", label: "100K tokens", description: "1/2 of a 200K window" },

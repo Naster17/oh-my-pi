@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- An explicit `thresholdPercent` now wins over a leftover `thresholdTokens`, so a fixed limit no longer silently moves the compaction trigger earlier than the configured percentage.
+
 ## [18.14.1] - 2026-10-31
 
 ### Breaking Changes

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+
+- Compaction Threshold now takes precedence over Compaction Token Limit, and the settings panel hides the token limit while a percentage is set, so the configured percentage is the trigger that actually runs.
+
 ## [18.14.1] - 2026-10-31
 
 ### Added

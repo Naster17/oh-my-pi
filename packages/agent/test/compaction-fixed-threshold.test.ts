@@ -52,3 +52,19 @@ describe("fixed compaction trigger near the window", () => {
 		expect(resolveThresholdTokens(1, fixed(5))).toBe(0);
 	});
 });
+
+describe("threshold precedence", () => {
+	// The settings panel can hold both a percentage and an older fixed token limit;
+	// the percentage is the policy the user chose last, so it must be the trigger.
+	it("honors an explicit percentage over a leftover fixed token limit", () => {
+		const settings: CompactionSettings = {
+			enabled: true,
+			thresholdPercent: 95,
+			thresholdTokens: 150_000,
+			keepRecentTokens: 20000,
+		};
+		expect(resolveThresholdTokens(200_000, settings)).toBe(190_000);
+		expect(shouldCompact(189_999, 200_000, settings)).toBe(false);
+		expect(shouldCompact(190_001, 200_000, settings)).toBe(true);
+	});
+});
