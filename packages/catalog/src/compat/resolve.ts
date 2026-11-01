@@ -939,7 +939,6 @@ function resolveAnthropicPolicy(
 		// user-authored `compat` block to override them.
 		maxImageDimension: undefined,
 		maxImagePayloadBytes: undefined,
-		thinkingLoopGuard: undefined,
 		// Present as keys so models.yml `compat` can set them; unset unless a rule assigns them.
 		stripThinkingHistory: undefined,
 		fastMode: undefined,
