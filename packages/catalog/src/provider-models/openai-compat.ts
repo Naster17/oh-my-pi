@@ -8218,6 +8218,16 @@ export interface ScalewayModelManagerConfig {
 	fetch?: FetchImpl;
 }
 
+// OrcaRouter
+// ---------------------------------------------------------------------------
+
+/** OrcaRouter OpenAI-compatible Responses API configuration. */
+export interface OrcaRouterModelManagerConfig {
+	apiKey?: string;
+	baseUrl?: string;
+	fetch?: FetchImpl;
+}
+
 /**
  * Scaleway model manager: plain OpenAI-compatible chat completions at
  * `api.scaleway.ai/v1` (fr-par serverless Generative APIs). `/v1/models`
@@ -8236,6 +8246,29 @@ export function scalewayModelManagerOptions(
 		dynamicModelsAuthoritative: true,
 		requireApiKey: true,
 		filterModel: (_entry, model) => !isExcludedModel("scaleway", model.id),
+		mapModel: mapWithBundledReference,
+	});
+}
+
+const ORCAROUTER_BASE_URL = "https://api.orcarouter.ai/v1";
+
+/**
+ * OrcaRouter model manager: OpenAI-compatible Responses API at
+ * https://api.orcarouter.ai/v1. The `/v1/models` endpoint is public and
+ * returns the live model roster with context windows and capabilities.
+ * Discovered models use the Responses API wire format.
+ */
+export function orcaRouterModelManagerOptions(
+	config?: OrcaRouterModelManagerConfig,
+): ModelManagerOptions<"openai-responses"> {
+	return createOpenAICompatibleModelManagerOptions({
+		api: "openai-responses",
+		providerId: "orcarouter",
+		defaultBaseUrl: ORCAROUTER_BASE_URL,
+		config,
+		requireApiKey: true,
+		filterModel: entry =>
+			Array.isArray(entry.supported_endpoint_types) && entry.supported_endpoint_types.includes("openai-response"),
 		mapModel: mapWithBundledReference,
 	});
 }
