@@ -5,7 +5,10 @@
 provider "orcarouter" {
 	default-model "orcarouter/fusion"
 	env "ORCA_KEY"
-	discovery label="OrcaRouter"
+	discovery label="OrcaRouter" allow-unauthenticated=#true
+	// The public /v1/models roster is the source of truth: rows it retires
+	// stop shipping with the next generated bundle and disappear at runtime.
+	dynamic-models-authoritative #true
 
 	// Replaces the strict-mode provider whitelist entry.
 	supports-strict-mode #true

@@ -12,6 +12,7 @@
 ### Added
 
 - Added OrcaRouter (`orcarouter`) as a provider: `/login orcarouter` with an API key (`ORCA_KEY`), dynamic discovery of Responses-API-compatible models from `https://api.orcarouter.ai/v1/models`, and a bundled roster of 86 models with `orcarouter/fusion` as the default
+- Added OrcaRouter (`orcarouter`) as a provider: `/login orcarouter` with an API key (`ORCA_KEY`) and dynamic discovery of Responses-API-compatible models from `https://api.orcarouter.ai/v1/models` ([#17734](https://github.com/can1357/oh-my-pi/pull/17734) by [@Naster17](https://github.com/Naster17))
 - Added the `supports-message-threads` compat axis (`supportsMessageThreads`), enabled for Claude 4.5 and newer on the first-party Anthropic provider
 - Added a standard Responses WebSocket capability rule for explicit opt-in through OMP settings or SDK preferences, disabled by default ([#17354](https://github.com/can1357/oh-my-pi/pull/17354) by [@TatsukiMeng](https://github.com/TatsukiMeng))
 - Added `tool-name-prefix` compat axis for Responses hosts that reject certain tool names; Muse Code sets it to `_` ([#17435](https://github.com/can1357/oh-my-pi/issues/17435), [#17515](https://github.com/can1357/oh-my-pi/pull/17515) by [@harshav167](https://github.com/harshav167), continued in [#18053](https://github.com/can1357/oh-my-pi/pull/18053) by [@abilliontokens](https://github.com/abilliontokens))
