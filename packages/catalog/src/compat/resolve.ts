@@ -598,7 +598,7 @@ function detectOpenAICompat(
 		reasoningDeltasMayBeCumulative: false,
 		emptyLengthFinishIsContextError: false,
 		usesOpenAIToolCallIdLimit: false,
-		promptCacheSessionHeader: hostMatchesUrl(baseUrl, "xai") ? "x-grok-conv-id" : undefined,
+		promptCacheSessionHeader: detectPromptCacheSessionHeader(baseUrl),
 		dropThinkingWhenReasoningEffort: false,
 		nativeKimiK3Reasoning: false,
 		zaiReasoningEffortDialect: false,
@@ -610,6 +610,15 @@ function detectOpenAICompat(
 		retryWithoutStrictOnGrammarError: false,
 		supportsPromptCacheKey: false,
 	};
+}
+
+/** Worker-affinity header a host routes on to keep a conversation on its cached prefix. */
+function detectPromptCacheSessionHeader(
+	baseUrl: string | undefined,
+): ResolvedOpenAISharedCompat["promptCacheSessionHeader"] {
+	if (hostMatchesUrl(baseUrl, "xai")) return "x-grok-conv-id";
+	if (hostMatchesUrl(baseUrl, "morph")) return "x-session-id";
+	return undefined;
 }
 
 /**
@@ -822,7 +831,7 @@ function resolveOpenAIResponsesPolicy(
 		reasoningDeltasMayBeCumulative: false,
 		emptyLengthFinishIsContextError: false,
 		usesOpenAIToolCallIdLimit: false,
-		promptCacheSessionHeader: hostMatchesUrl(baseUrl, "xai") ? "x-grok-conv-id" : undefined,
+		promptCacheSessionHeader: detectPromptCacheSessionHeader(baseUrl),
 		streamFirstEventTimeoutMs: isLocalServingBackend ? 0 : spec.compat?.streamFirstEventTimeoutMs,
 		streamIdleTimeoutMs: isLocalServingBackend
 			? LOCAL_OPENAI_COMPAT_STREAM_IDLE_TIMEOUT_MS
@@ -1013,6 +1022,8 @@ function resolveGooglePolicy(
 		// a KDL rule or a user `compat` block can declare one.
 		maxImageDimension: undefined,
 		maxImagePayloadBytes: undefined,
+		// Unset keeps the bundled catalog rows byte-identical; the key must exist for `compat` overrides to apply.
+		base64SkipThoughtSignature: undefined,
 	};
 	applyWireAxes(compat, axes.wire, spec.api);
 	applyCompatOverrides(compat, spec.compat);
