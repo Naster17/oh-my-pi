@@ -18,6 +18,7 @@ import { cfgComposerPredictions, cfgTuiVimMode } from "../modes/settings";
 import { cfgAdvisorEnabled } from "../advisor/settings";
 import { cfgContextFilesExtra, cfgCompactionThresholdPercent } from "../session/context-settings";
 import { cfgToolsRestrictedFolders } from "../tools/settings";
+import { cfgTaskPerCallModelAllow } from "../task/settings";
 import { cfgAuthUnpausedProviders } from "./model-settings";
 
 /** Condition over the global settings; hidden (false) until they are initialized. */
