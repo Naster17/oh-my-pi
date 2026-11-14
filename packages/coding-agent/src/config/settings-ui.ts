@@ -18,6 +18,7 @@ import { cfgComposerPredictions, cfgTuiVimMode } from "../modes/settings";
 import { cfgAdvisorEnabled } from "../advisor/settings";
 import { cfgContextFilesExtra, cfgCompactionThresholdPercent } from "../session/context-settings";
 import { cfgToolsRestrictedFolders } from "../tools/settings";
+import { cfgAuthUnpausedProviders } from "./model-settings";
 
 /** Condition over the global settings; hidden (false) until they are initialized. */
 function whenSettings(test: (settings: Settings) => boolean): () => boolean {
@@ -43,6 +44,8 @@ const CONDITIONS: Record<string, () => boolean> = {
 	restrictedFoldersNotProject: whenSettings(s => cfgToolsRestrictedFolders.provenance(s) !== "project"),
 	// A positive percentage is the active trigger; a fixed limit alongside it would be dead weight.
 	compactionThresholdDefault: whenSettings(s => !(cfgCompactionThresholdPercent.get(s) > 0)),
+	perCallModelAllowNotProject: whenSettings(s => cfgTaskPerCallModelAllow.provenance(s) !== "project"),
+	unpausedProvidersNotProject: whenSettings(s => cfgAuthUnpausedProviders.provenance(s) !== "project"),
 };
 
 /** Description suffix telling the panel user that an environment variable is in play. */
