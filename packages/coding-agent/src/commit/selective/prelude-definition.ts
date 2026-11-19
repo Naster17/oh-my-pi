@@ -1,6 +1,6 @@
 import { type } from "@oh-my-pi/omptype";
 import { ToolError } from "@oh-my-pi/pi-tui/tools/tool-errors";
-import type { EvalPreludeDefinition } from "../../eval/preludes";
+import type { HostEvalPreludeDefinition } from "../../eval/preludes";
 import commitDocumentation from "../../prompts/tools/commit.md" with { type: "text" };
 import commitGuidance from "../../prompts/tools/commit-guidance.md" with { type: "text" };
 import { AgentRegistry, MAIN_AGENT_ID } from "../../registry/agent-registry";
@@ -36,6 +36,7 @@ const paramsSchema = type({ action: "'draft'", "agents?": "string | string[]", "
 		"body?": "string | string[]",
 		"fixes?": "(number | string)[]",
 		"amend?": "boolean",
+		"noVerify?": "boolean",
 		"+": "reject",
 	});
 
@@ -90,7 +91,7 @@ function describeCall(parameters: unknown): string | undefined {
  * Create the `commit` eval prelude: draft the session agent tree's changes from its change
  * journal, adjust the selection, and commit it without touching other agents' work.
  */
-export function createCommitPrelude(session: ToolSession): EvalPreludeDefinition {
+export function createCommitPrelude(session: ToolSession): HostEvalPreludeDefinition {
 	const drafts = new Map<string, { draft: Draft; scope: ScopeSpec }>();
 	const remember = (draft: Draft, scope: ScopeSpec) => {
 		drafts.set(draft.id, { draft, scope });
@@ -112,12 +113,13 @@ export function createCommitPrelude(session: ToolSession): EvalPreludeDefinition
 		return entry;
 	};
 
+	const describe = (draft: Draft) => ({ id: draft.id, head: draft.head, scope: [...draft.scope] });
 	const invoke = async (params: CommitParams, signal?: AbortSignal) => {
 		if (params.action === "draft") {
 			const cwd = params.repo === undefined ? session.cwd : resolveToCwd(params.repo, session.cwd);
 			const draft = await draftFor(context(signal, cwd), params.agents);
 			remember(draft, params.agents);
-			return { text: draft.summary(), details: { id: draft.id, head: draft.head, scope: [...draft.scope] } };
+			return { text: draft.summary(), details: describe(draft) };
 		}
 		const { draft, scope } = lookup(params.draft);
 		switch (params.action) {
@@ -137,7 +139,13 @@ export function createCommitPrelude(session: ToolSession): EvalPreludeDefinition
 				const { agent, artifactsDir } = context(signal);
 				const outcome = await commitSelection(
 					draft,
-					{ subject: params.subject, body: params.body, fixes: params.fixes, amend: params.amend },
+					{
+						subject: params.subject,
+						body: params.body,
+						fixes: params.fixes,
+						amend: params.amend,
+						noVerify: params.noVerify,
+					},
 					{
 						journal: artifactsDir ? ChangeJournal.at(artifactsDir) : null,
 						agent: { agent, parent: AgentRegistry.global().get(agent)?.parentId },
@@ -147,15 +155,19 @@ export function createCommitPrelude(session: ToolSession): EvalPreludeDefinition
 				drafts.delete(draft.id);
 				const remaining = await draftFor(context(signal, draft.root), scope);
 				remember(remaining, scope);
-				const lines = [
-					`[${draft.branch ?? "HEAD"} ${outcome.sha.slice(0, 10)}] ${outcome.subject}`,
-					`${outcome.paths.length} path(s): ${outcome.paths.join(", ")}`,
-				];
-				if (outcome.parent !== draft.head) {
-					lines.push(`HEAD had moved to ${outcome.parent.slice(0, 10)}; the selection applied cleanly on top.`);
+				const lines = [`[${draft.branch ?? "HEAD"} ${outcome.sha.slice(0, 10)}] ${outcome.subject}`];
+				if (outcome.amended) {
+					lines.push(
+						`amended ${outcome.amended.slice(0, 10)} (parent ${outcome.parent?.slice(0, 10) ?? "none, root commit"})`,
+					);
+				}
+				lines.push(`${outcome.paths.length} path(s): ${outcome.paths.join(", ")}`);
+				const placedOn = outcome.amended ?? outcome.parent;
+				if (placedOn && placedOn !== draft.head) {
+					lines.push(`HEAD had moved to ${placedOn.slice(0, 10)}; the selection applied cleanly on top.`);
 				}
 				lines.push(...outcome.indexNotes, "", "Remaining:", remaining.summary());
-				return { text: lines.join("\n"), details: { ...outcome, remaining: remaining.id } };
+				return { text: lines.join("\n"), details: { ...outcome, remaining: describe(remaining) } };
 			}
 		}
 	};

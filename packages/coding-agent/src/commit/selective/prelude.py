@@ -14,8 +14,16 @@ def _make_commit():
             raise RuntimeError("commit returned an invalid response")
         return response.get("text") or "", response.get("details")
 
+    def _flat(values):
+        """`values` with list and tuple arguments spread, as JS `only(["a", "b"])` does."""
+        return [
+            item
+            for value in values
+            for item in (value if isinstance(value, (list, tuple)) else [value])
+        ]
+
     def _units(units):
-        return [str(unit) for unit in units] or None
+        return [str(unit) for unit in _flat(units)] or None
 
     class _Draft:
         __slots__ = ("id", "details", "_text")
@@ -53,7 +61,7 @@ def _make_commit():
             return self
 
         async def only(self, *globs, silent=False):
-            text, _ = await self._run("only", {"globs": list(globs)}, silent)
+            text, _ = await self._run("only", {"globs": _flat(globs)}, silent)
             self._text = text
             return self
 
@@ -61,14 +69,26 @@ def _make_commit():
             text, _ = await self._run("diff", {}, silent)
             return text
 
-        async def commit(self, subject, body=None, *, fixes=None, amend=False, silent=False):
+        async def commit(
+            self, subject, body=None, *, fixes=None, amend=False, no_verify=False, silent=False
+        ):
             if isinstance(fixes, (int, str)):
                 fixes = [fixes]
-            _, details = await self._run(
+            text, details = await self._run(
                 "commit",
-                {"subject": subject, "body": body, "fixes": fixes, "amend": amend or None},
+                {
+                    "subject": subject,
+                    "body": body,
+                    "fixes": fixes,
+                    "amend": amend or None,
+                    "noVerify": no_verify or None,
+                },
                 silent,
             )
+            # The committed draft is gone; continue with what remains.
+            self.id = details["remaining"]["id"]
+            self.details = details["remaining"]
+            self._text = text
             return details
 
     class _Commit:
